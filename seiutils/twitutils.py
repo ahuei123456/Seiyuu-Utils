@@ -1,4 +1,5 @@
 import tweepy, html, urllib.request, os, requests, bs4, re, linkutils
+from os import path
 
 twit_url = r'https://twitter.com/'
 
@@ -8,11 +9,9 @@ def get_links(status):
     try:
         i_status = status.extended_tweet
         medias = i_status['extended_entities']['media']
-    except AttributeError or KeyError:
+    except (AttributeError, KeyError):
         if hasattr(status, 'extended_entities') and 'media' in status.extended_entities.keys():
             medias = status.extended_entities['media']
-
-
 
     try:
         for media in medias:
@@ -36,7 +35,7 @@ def get_links(status):
     try:
         i_status = status.extended_tweet
         links = i_status['entities']['urls']
-    except AttributeError or KeyError:
+    except (AttributeError, KeyError):
         links = status.entities['urls']
 
     try:
@@ -104,7 +103,7 @@ def get_images(status):
     try:
         i_status = status.extended_tweet
         medias = i_status['extended_entities']['media']
-    except AttributeError or KeyError:
+    except (AttributeError, KeyError):
         if hasattr(status, 'extended_entities') and 'media' in status.extended_entities.keys():
             medias = status.extended_entities['media']
 
@@ -134,7 +133,7 @@ def get_images(status):
     try:
         i_status = status.extended_tweet
         urls = i_status['entities']['urls']
-    except AttributeError or KeyError:
+    except (AttributeError, KeyError):
         urls = status.entities['urls']
 
     try:
@@ -199,3 +198,7 @@ def get_tweets(api_twitter, username: str, num=1):
 
 def get_user(api_twitter, user_id):
     return api_twitter.get_user(user_id)
+
+
+
+
