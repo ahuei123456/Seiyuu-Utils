@@ -1,5 +1,5 @@
-import discord, html, twitutils
-
+import discord, html
+from seiutils import twitutils
 
 def encode_tweet(tweet):
     title = "Tweet by {0}".format(tweet.user.name)

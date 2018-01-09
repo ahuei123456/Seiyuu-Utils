@@ -1,6 +1,6 @@
-import tweepy, html, urllib.request, os, requests, bs4, re, linkutils
+import tweepy, html, urllib.request, os, requests, bs4, re
+from seiutils import linkutils
 from os import path
-
 twit_url = r'https://twitter.com/'
 
 
@@ -100,14 +100,13 @@ def get_video(status):
 
 def get_images(status):
     links = []
+    medias = []
     try:
         i_status = status.extended_tweet
         medias = i_status['extended_entities']['media']
     except (AttributeError, KeyError):
         if hasattr(status, 'extended_entities') and 'media' in status.extended_entities.keys():
             medias = status.extended_entities['media']
-
-    print(len(medias))
 
     try:
         for media in medias:
@@ -144,6 +143,12 @@ def get_images(status):
         pass
 
     return links
+
+def get_category(status):
+    text = get_text(status)
+
+    cat = text.split('】')[0][1:]
+    return cat
 
 
 def make_url(username):
