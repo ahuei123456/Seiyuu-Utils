@@ -1,69 +1,28 @@
-import tweepy, html, urllib.request, os, requests, bs4, re
 from seiutils import linkutils
-from os import path
-twit_url = r'https://twitter.com/'
+import html
+import logging
 
 
-def get_links(status):
+logger = logging.getLogger(__name__)
+TWITTER_URL = r'https://twitter.com/'
+
+
+def get_uploaded_links(status):
+    logger.info(f'Getting uploaded links for status {status.id}')
     links = []
-    try:
-        i_status = status.extended_tweet
-        medias = i_status['extended_entities']['media']
-    except (AttributeError, KeyError):
-        if hasattr(status, 'extended_entities') and 'media' in status.extended_entities.keys():
-            medias = status.extended_entities['media']
-
-    try:
-        for media in medias:
-            if not media['type'] == 'video':
-                links.append(media['media_url'])
-            else:
-                videos = media['video_info']['variants']
-                bitrate = 0
-                index = 0
-                for i in range(0, len(videos)):
-                    if videos[i]['content_type'] == 'video/mp4':
-                        br = int(videos[i]['bitrate'])
-                        if br > bitrate:
-                            bitrate = br
-                            index = i
-
-                links.append(videos[index]['url'])
-    except AttributeError:
-        pass
-
-    try:
-        i_status = status.extended_tweet
-        links = i_status['entities']['urls']
-    except (AttributeError, KeyError):
-        links = status.entities['urls']
-
-    try:
-        for link in links:
-            ext = link['expanded_url']
-            links.extend(linkutils.get_link(ext))
-    except AttributeError:
-        pass
+    links.extend(get_uploaded_media(status))
+    links.extend(get_urls(status))
 
     return links
 
 
 def get_text(status):
+    logger.info(f'Getting text for status {status.id}')
     status = get_status(status)
-    print(dir(status))
     try:
-        status = status.extended_tweet
-        print(dir(status))
-        text = status['full_text']
-        #full_text
-        print('tweet is extended (01)')
+        text = status.extended_tweet['full_text']
     except AttributeError:
-        try:
-            text = status.full_text
-            print('tweet is extended (02)')
-        except AttributeError:
-            text = status.text
-            print('tweet is not extended')
+        text = status.full_text
 
     return html.unescape(text)
 
@@ -75,74 +34,101 @@ def get_status(status):
     return status
 
 
-def get_video(status):
+def get_uploaded_media(status):
+    logger.info(f'Getting uploaded media for status {status.id}')
     links = []
-    try:
-        if hasattr(status, 'extended_entities') and 'media' in status.extended_entities.keys():
-            for media in status.extended_entities['media']:
-                if media['type'] == 'video':
-                    videos = media['video_info']['variants']
-                    bitrate = 0
-                    index = 0
-                    for i in range(0, len(videos)):
-                        if videos[i]['content_type'] == 'video/mp4':
-                            br = int(videos[i]['bitrate'])
-                            if br > bitrate:
-                                bitrate = br
-                                index = i
+    video_link = get_uploaded_video(status)
 
-                    links.append(videos[index]['url'])
+    if video_link is not None:
+        links.append(video_link)
+
+    links.extend(get_uploaded_images(status))
+
+    return links
+
+
+def get_uploaded_video(status):
+    logger.info(f'Getting uploaded video for status {status.id}')
+    medias = get_media_entities(status)
+
+    for media in medias:
+        if media['type'] == 'video':
+            videos = media['video_info']['variants']
+            bitrate = 0
+            index = 0
+            for i in range(0, len(videos)):
+                if videos[i]['content_type'] == 'video/mp4':
+                    br = int(videos[i]['bitrate'])
+                    if br > bitrate:
+                        bitrate = br
+                        index = i
+
+            return videos[index]['url']
+
+    return None
+
+
+def get_all_images(status):
+    logger.info(f'Getting all images for status {status.id}')
+    links = []
+    links.extend(get_uploaded_images(status))
+    links.extend(get_external_images(status))
+    return links
+
+
+def get_uploaded_images(status):
+    logger.info(f'Getting uploaded images for status {status.id}')
+    links = []
+    medias = get_media_entities(status)
+
+    try:
+        for media in medias:
+            if not media['type'] == 'video':
+                links.append(media['media_url'])
     except AttributeError:
         pass
 
     return links
 
 
-def get_images(status):
+def get_external_images(status):
+    logger.info(f'Getting external images for status {status.id}')
     links = []
-    medias = []
-    try:
-        i_status = status.extended_tweet
-        medias = i_status['extended_entities']['media']
-    except (AttributeError, KeyError):
-        if hasattr(status, 'extended_entities') and 'media' in status.extended_entities.keys():
-            medias = status.extended_entities['media']
-
-    try:
-        for media in medias:
-            print(media.keys())
-            if not media['type'] == 'video':
-                print(media['media_url'])
-                links.append(media['media_url'])
-            else:
-                videos = media['video_info']['variants']
-                bitrate = 0
-                index = 0
-                for i in range(0, len(videos)):
-                    if videos[i]['content_type'] == 'video/mp4':
-                        br = int(videos[i]['bitrate'])
-                        if br > bitrate:
-                            bitrate = br
-                            index = i
-
-                links.append(videos[index]['url'])
-    except AttributeError:
-        pass
-
-    try:
-        i_status = status.extended_tweet
-        urls = i_status['entities']['urls']
-    except (AttributeError, KeyError):
-        urls = status.entities['urls']
+    urls = get_urls(status)
 
     try:
         for link in urls:
             ext = link['expanded_url']
-            links.extend(linkutils.get_link(ext))
+            links.extend(linkutils.get_images(ext))
     except AttributeError:
         pass
 
     return links
+
+
+def get_media_entities(status):
+    logger.info(f'Getting media entities for status {status.id}')
+    status = get_status(status)
+
+    try:
+        try:
+            e_status = status.extended_tweet
+            return e_status['extended_entities']['media']
+        except AttributeError:
+            return status.extended_entities['media']
+    except KeyError:
+        return []
+
+
+def get_urls(status):
+    logger.info(f'Getting uploaded urls for status {status.id}')
+    status = get_status(status)
+
+    try:
+        return status.entities['urls']
+    except (AttributeError, KeyError, IndexError):
+        return []
+
 
 def get_category(status):
     text = get_text(status)
@@ -152,7 +138,7 @@ def get_category(status):
 
 
 def make_url(username):
-    return twit_url + username
+    return TWITTER_URL + username
 
 
 def is_reply(status):
@@ -161,13 +147,6 @@ def is_reply(status):
 
 def is_retweet(status):
     return hasattr(status, 'retweeted_status')
-
-
-def get_filtered_tweets(username: str, num=1):
-    statuses = get_tweets(username, num)
-    statuses = strip_replies(statuses)
-    statuses = strip_retweets(statuses)
-    return statuses
 
 
 def strip_retweets(tweets):
@@ -186,24 +165,3 @@ def strip_replies(tweets):
             stripped.append(tweet)
 
     return stripped
-
-
-def get_user(api_twitter, user_id):
-    return api_twitter.get_user(user_id)
-
-
-def get_user_id(api_twitter, user_id: str):
-    return api_twitter.get_user(user_id).id
-
-
-def get_tweets(api_twitter, username: str, num=1):
-    statuses = list(tweepy.Cursor(api_twitter.user_timeline, id=id).items(num))
-    return statuses
-
-
-def get_user(api_twitter, user_id):
-    return api_twitter.get_user(user_id)
-
-
-
-

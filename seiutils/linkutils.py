@@ -1,23 +1,30 @@
-import tweepy, html, urllib.request, os, requests, bs4, re
 from os import path
+from urllib.parse import urlparse
+from requests.exceptions import RequestException
+import bs4
+import logging
+import requests
 
 cdj_url = path.join(r'http://www.cdjapan.co.jp/aff/click.cgi/PytJTGW7Lok/5794/A596200/product%2F')
+logger = logging.getLogger(__name__)
 
 
-def get_link(link: str):
-    print(link)
+def get_images(link: str):
+    logger.info(f'Scraping images for {link}')
+    base = get_base_url(link)
     links = []
-    if link.find('instagram.com') != -1:
-        links.append(get_insta(link))
-    elif link.find('ameblo.jp') != -1:
+    if base == 'www.instagram.com':
+        links.extend(get_insta(link))
+    elif base == 'www.ameblo.jp':
         links.extend(get_ameblo(link))
-    elif link.find('lineblog.me') != -1:
+    elif base == 'www.lineblog.me':
         links.extend(get_lineblog(link))
-    print(links)
+
     return links
 
 
 def get_ameblo(ameblo_link: str):
+    logger.info(f'Scraping from ameblo')
     r = requests.get(ameblo_link)
     html = r.content
     soup = bs4.BeautifulSoup(html, 'html.parser')
@@ -30,7 +37,6 @@ def get_ameblo(ameblo_link: str):
             if 'detailOn' in item['class']:
                 for child in item.children:
                     image = child['src'].split('?')[0]
-                    #image = image.sub('', 't\d*_')
                     links.append(image)
         except KeyError:
             pass
@@ -39,27 +45,32 @@ def get_ameblo(ameblo_link: str):
 
 
 def get_insta(insta_link: str):
-    r = requests.get(insta_link)
-    html = r.content
-    soup = bs4.BeautifulSoup(html, 'html.parser')
-    food = soup.find_all('meta')
-    link = ''
-    for item in food:
-        try:
-            if item['property'] == 'og:image':
-                link = item['content']
-                link = link.split('?ig_cache_key')[0]
-            if item['property'] == 'og:video':
-                link = item['content']
-        except AttributeError:
-            pass
-        except KeyError:
-            pass
-
-    return link
+    logger.info(f'Scraping from instagram')
+    links = []
+    try:
+        r = requests.get(insta_link)
+        html = r.content
+        soup = bs4.BeautifulSoup(html, 'html.parser')
+        food = soup.find_all('meta')
+        link = ''
+        for item in food:
+            try:
+                if item['property'] == 'og:image':
+                    link = item['content']
+                    link = link.split('?ig_cache_key')[0]
+                if item['property'] == 'og:video':
+                    link = item['content']
+            except AttributeError:
+                pass
+            except KeyError:
+                pass
+    except RequestException as e:
+        logger.error(e)
+    return links
 
 
 def get_lineblog(lineblog_link: str):
+    logger.info(f'Scraping from lineblog')
     r = requests.get(lineblog_link)
     html = r.content
     soup = bs4.BeautifulSoup(html, 'html.parser')
@@ -104,6 +115,7 @@ def shill(code: str):
 
     return cdj_url + code
 
+
 def get_cdjapan(cdj_link: str):
     r = requests.get(cdj_link)
     html = r.content
@@ -119,3 +131,9 @@ def get_cdjapan(cdj_link: str):
         except KeyError:
             pass
     pass
+
+
+def get_base_url(link: str):
+    parsed_url = urlparse(link)
+
+    return parsed_url.netloc
