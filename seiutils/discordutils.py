@@ -60,7 +60,6 @@ def embed_tweet(status):
                     text += make_url(str(count + 1), images[i]) + ' '
                     count += 1
                 else:
-                    print(len(text))
                     embed.add_field(name=f'Media {fields}', value=text)
                     text = ''
                     count = 0

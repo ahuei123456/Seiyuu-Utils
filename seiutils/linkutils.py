@@ -127,7 +127,7 @@ def get_cdjapan(cdj_link: str):
         try:
             if 'product_info' in item['class']:
                 for child in item.children:
-                    print(child)
+                    pass
         except KeyError:
             pass
     pass
