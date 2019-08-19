@@ -88,7 +88,7 @@ def get_uploaded_images(status):
         for media in medias:
             if not media['type'] == 'video':
                 links.append(media['media_url'])
-    except AttributeError:
+    except KeyError:
         pass
 
     return links
@@ -103,7 +103,7 @@ def get_external_images(status):
         for link in urls:
             ext = link['expanded_url']
             links.extend(linkutils.get_images(ext))
-    except AttributeError:
+    except KeyError:
         pass
 
     return links
@@ -119,7 +119,7 @@ def get_media_entities(status):
             return e_status['extended_entities']['media']
         except AttributeError:
             return status.extended_entities['media']
-    except KeyError:
+    except (AttributeError, KeyError):
         return []
 
 
