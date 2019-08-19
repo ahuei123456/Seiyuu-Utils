@@ -22,7 +22,10 @@ def get_text(status):
     try:
         text = status.extended_tweet['full_text']
     except AttributeError:
-        text = status.full_text
+        try:
+            text = status.full_text
+        except AttributeError:
+            text = status.text
 
     return html.unescape(text)
 
