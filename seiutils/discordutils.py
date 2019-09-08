@@ -31,7 +31,7 @@ def embed_tweet(status):
 
     description = ''
     if twitutils.is_retweet(status):
-        description += html.unescape(f'RT {html.unescape(twitutils.get_status(status).user.screen_name)}: {twitutils.get_text(status)}')
+        description += html.unescape(f'RT {html.unescape(twitutils.get_status(status).user.name)}: {twitutils.get_text(status)}')
     else:
         description += twitutils.get_text(status)
 
