@@ -8,7 +8,7 @@ TWITTER_URL = r'https://twitter.com/'
 
 
 def get_uploaded_links(status):
-    logger.info(f'Getting uploaded links for status {status.id}')
+    logger.debug(f'Getting uploaded links for status {status.id}')
     links = []
     links.extend(get_uploaded_media(status))
     links.extend(get_urls(status))
@@ -17,7 +17,7 @@ def get_uploaded_links(status):
 
 
 def get_text(status):
-    logger.info(f'Getting text for status {status.id}')
+    logger.debug(f'Getting text for status {status.id}')
     status = get_status(status)
     try:
         text = status.extended_tweet['full_text']
@@ -38,7 +38,7 @@ def get_status(status):
 
 
 def get_uploaded_media(status):
-    logger.info(f'Getting uploaded media for status {status.id}')
+    logger.debug(f'Getting uploaded media for status {status.id}')
     links = []
     video_link = get_uploaded_video(status)
 
@@ -51,7 +51,7 @@ def get_uploaded_media(status):
 
 
 def get_uploaded_video(status):
-    logger.info(f'Getting uploaded video for status {status.id}')
+    logger.debug(f'Getting uploaded video for status {status.id}')
     medias = get_media_entities(status)
 
     for media in medias:
@@ -72,7 +72,7 @@ def get_uploaded_video(status):
 
 
 def get_all_images(status):
-    logger.info(f'Getting all images for status {status.id}')
+    logger.debug(f'Getting all images for status {status.id}')
     links = []
     links.extend(get_uploaded_images(status))
     links.extend(get_external_images(status))
@@ -80,7 +80,7 @@ def get_all_images(status):
 
 
 def get_uploaded_images(status):
-    logger.info(f'Getting uploaded images for status {status.id}')
+    logger.debug(f'Getting uploaded images for status {status.id}')
     links = []
     medias = get_media_entities(status)
 
@@ -95,7 +95,7 @@ def get_uploaded_images(status):
 
 
 def get_external_images(status):
-    logger.info(f'Getting external images for status {status.id}')
+    logger.debug(f'Getting external images for status {status.id}')
     links = []
     urls = get_urls(status)
 
@@ -110,7 +110,7 @@ def get_external_images(status):
 
 
 def get_media_entities(status):
-    logger.info(f'Getting media entities for status {status.id}')
+    logger.debug(f'Getting media entities for status {status.id}')
     status = get_status(status)
 
     try:
@@ -124,7 +124,7 @@ def get_media_entities(status):
 
 
 def get_urls(status):
-    logger.info(f'Getting uploaded urls for status {status.id}')
+    logger.debug(f'Getting uploaded urls for status {status.id}')
     status = get_status(status)
 
     try:

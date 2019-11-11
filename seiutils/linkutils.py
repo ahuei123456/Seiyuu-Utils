@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_images(link: str):
-    logger.info(f'Scraping images for {link}')
+    logger.debug(f'Scraping images for {link}')
     base = get_base_url(link)
     links = []
     if base == 'www.instagram.com':
@@ -24,7 +24,7 @@ def get_images(link: str):
 
 
 def get_ameblo(ameblo_link: str):
-    logger.info(f'Scraping from ameblo')
+    logger.debug(f'Scraping from ameblo')
     r = requests.get(ameblo_link)
     html = r.content
     soup = bs4.BeautifulSoup(html, 'html.parser')
@@ -45,7 +45,7 @@ def get_ameblo(ameblo_link: str):
 
 
 def get_insta(insta_link: str):
-    logger.info(f'Scraping from instagram')
+    logger.debug(f'Scraping from instagram')
     links = []
     try:
         r = requests.get(insta_link)
@@ -70,7 +70,7 @@ def get_insta(insta_link: str):
 
 
 def get_lineblog(lineblog_link: str):
-    logger.info(f'Scraping from lineblog')
+    logger.debug(f'Scraping from lineblog')
     r = requests.get(lineblog_link)
     html = r.content
     soup = bs4.BeautifulSoup(html, 'html.parser')

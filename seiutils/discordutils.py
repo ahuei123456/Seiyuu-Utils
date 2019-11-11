@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 def text_tweet(status):
-    logger.info(f'Converting tweet {status.id} into text')
+    logger.debug(f'Converting tweet {status.id} into text')
     user = status.user.name
     text = status.text
     send = f"Tweet by {user}: {text}\n"
@@ -21,7 +21,7 @@ def text_tweet(status):
 
 
 def embed_tweet(status):
-    logger.info(f'Embedding tweet {status.id}')
+    logger.debug(f'Embedding tweet {status.id}')
 
     user = status.user
     username = html.unescape(status.user.screen_name)
@@ -35,17 +35,17 @@ def embed_tweet(status):
     else:
         description += twitutils.get_text(status)
 
-    logger.info(f'Title: {title}')
-    logger.info(f'Description: {description}')
+    logger.debug(f'Title: {title}')
+    logger.debug(f'Description: {description}')
 
     video = twitutils.get_uploaded_video(status)
 
     if video is not None:
-        logger.info('Adding video to embed')
+        logger.debug('Adding video to embed')
         embed = discord.Embed(video=video, description=description, title=title)
         embed.add_field(name='Media', value=video)
     else:
-        logger.info('Adding images to embed')
+        logger.debug('Adding images to embed')
         embed = discord.Embed(description=description, title=title)
         images = twitutils.get_all_images(status)
         if len(images) > 0:
